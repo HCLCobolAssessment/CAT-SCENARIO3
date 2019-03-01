@@ -63,11 +63,11 @@
 008000      03  STREETNAME1 PIC X(3).                                   00800026
 008000      03  TELEPHONE1  PIC X(7).                                   00800026
 008100 01 WS-RECORDS1 .                                                 00810026
-008200      03 FILLER  PIC X(25) VALUE '12345678DANAPALABC2345671'.     00820026
+008200      03 FILLER  PIC X(25) VALUE '12345778DANAPALABC2345671'.     00820026
 008300      03 FILLER  PIC X(25) VALUE '33344678DEEPA  AAE2545671'.     00830026
 008400      03 FILLER  PIC X(25) VALUE '11335778LEE    ABD2645671'.     00840026
 008500      03 FILLER  PIC X(25) VALUE '19336798LIPSA  CBD2785671'.     00850026
-008600      03 FILLER  PIC X(25) VALUE '18556898LEEDA  ZCD6685671'.     00860026
+008600      03 FILLER  PIC X(25) VALUE '18556900LEEDA  ZCD6685671'.     00860026
 008700      03 FILLER  PIC X(25) VALUE '66598798LISSY  QRS7785671'.     00870026
 
 009020 01 FILLER REDEFINES WS-RECORDS1.                                 00902026
@@ -80,7 +80,7 @@
 008000      03  STREETNAME2 PIC X(3).                                    00800026
 008000      03  TELEPHONE2  PIC X(7).                                    00800026
 008100 01 WS-RECORDS2 .                                                   00810026
-008200      03 FILLER  PIC X(22) VALUE '45678DANAPALABC2345771'.           00820026
+008200      03 FILLER  PIC X(22) VALUE '45678zzzzzLABC2345771'.            00820026
 008300      03 FILLER  PIC X(22) VALUE '44678AAAAA  AEE2545771'.           00830026
 008400      03 FILLER  PIC X(22) VALUE '35778BBBBB  ACD2645771'.           00840026
 008500      03 FILLER  PIC X(22) VALUE '36798CCCCC  CVD2785771'.           00850026
@@ -96,7 +96,11 @@
 007800      03  AEGON-NR3   PIC X(5).                                    00780026
 007900      03  NAME3       PIC X(7).                                    00790026
 008000      03  STREETNAME3 PIC X(3).                                    00800026
-008000      03  TELEPHONE3  PIC X(7).                                    00800026
+008000      03  TELEPHONE3  PIC X(7).   
+            
+       01 WS-MATCHED        PIC X(1).
+          88 MATCH          VALUE "Y".
+          88 NOMATCH        VALUE "N".                                   00800026
 
 009040*----------------------------------------------------------------*00904026
 009050 PROCEDURE DIVISION .                                             00905026
@@ -106,39 +110,41 @@
 009090 A-001.                                                           00909026
 009100                                                                  00910026
 009200            INITIALIZE I.                                         00920026
-009300   
                                                                         0930026
-009900                                                                  00990026
-010000                                                                  01000026
+                                                                        00990026
+                                                                        01000026
 010100            INITIALIZE WS-INPUTFILE-1                             01010026
                   INITIALIZE WS-INPUTFILE-2                             01010026
-                  PERFORM VARYING I FROM 1 BY 1 UNTIL I=6
-                  MOVE WS-RECORDS3(I) TO WS-INPUTFILE-1   
-		          PERFORM VARYING J FROM 1 BY 1 UNTIL J=6	
-                  MOVE WS-RECORDS4(J) TO WS-INPUTFILE-2
-                  IF AEGON-NR1 = AEGON-NR2
-                  MOVE POLICYNUM   TO POLICY-NO
-010300            MOVE AEGON-NR1   TO AEGON-NR3                          01030026
-010300            MOVE NAME1       TO NAME3                               01030026
-010300            MOVE STREETNAME1 TO STREETNAME3                         01030026
-010300            MOVE TELEPHONE1 TO TELEPHONE3   
-                  END-IF                                                 01030026
-                  END-PERFORM             
-                  MOVE POLICYNUM TO POLICY-NO
-010300            MOVE AEGON-NR2    TO AEGON-NR3                            01030026
-010300            MOVE NAME2        TO NAME3                                01030026
-010300            MOVE STREETNAME2  TO STREETNAME3                          01030026
-010300            MOVE TELEPHONE2   TO TELEPHONE3                           01030026
+                  PERFORM VARYING I FROM 1 BY 1 UNTIL I > 6
+                  MOVE WS-RECORDS3(I) TO WS-INPUTFILE-1
+                    INITIALIZE J
+                    INITIALIZE WS-MATCHED
+		            PERFORM VARYING J FROM 1 BY 1 UNTIL J > 6	
+                    MOVE WS-RECORDS4(J) TO WS-INPUTFILE-2
+                     IF AEGON-NR1 = AEGON-NR2
+                        MOVE "Y"         TO WS-MATCHED
+                        MOVE POLICYNUM   TO POLICY-NO
+010300                  MOVE AEGON-NR2   TO AEGON-NR3                    01030026
+010300                  MOVE NAME2       TO NAME3                         01030026
+010300                  MOVE STREETNAME2 TO STREETNAME3                   01030026
+010300                  MOVE TELEPHONE2  TO TELEPHONE3
+                    END-IF                                                                       01030026
+                    END-PERFORM
+                    
+                    IF MATCH
+                       CONTINUE
+                    ELSE
+                       MOVE WS-INPUTFILE-1 TO WS-OUTFILE-1
+                    END-IF
+                    
+                    DISPLAY "POLICY-NO: " POLICY-NO
+                    DISPLAY "AEGON-NR3: " AEGON-NR3
+                    DISPLAY "NAME3 " NAME3
+                    DISPLAY "STREETNAME3: " STREETNAME3
+                    DISPLAY "TELEPHONE3: " TELEPHONE3
+                    
 010500            END-PERFORM
-011600                                                                  01160026
-011700                                                                  01170026
-011800         DISPLAY "POLICY-NO: " POLICY-NO                          01180026
-011900         DISPLAY "AEGON-NR3: " AEGON-NR3                          01190026
-012000         DISPLAY "NAME3 " NAME3                                   01200026
-012100         DISPLAY "STREETNAME3: " STREETNAME3.                     
-                                                                        1210026
-012100         DISPLAY "TELEPHONE3: " TELEPHONE3.                       
-                                                                        1210026 
+                  .                                                     1210026 
                                                                         1220026
 012300 A-999.                                                           01230026
 012400     GOBACK.                                                      01240026
